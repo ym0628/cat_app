@@ -12,6 +12,8 @@ https://www.commte.co.jp/learn-nextjs/next-head
 
 https://commte.net/nextjs-google-font
 
+https://thecatapi.com/
+
 
 - TypeScriptをメイン言語、フレームワークをNext.jsとして、アプリケーションを作っていきます。
 - 任意のディレクトリに移動して、
@@ -137,7 +139,74 @@ const Home: NextPage = () => {
 ***<font color="Red">動画05分20秒付近から</font>***
 
 - 今回は`index.tsx`のページのコードの大部分を削除してしまって、ここにアプリケーション機能を実装していきます。
+- ここまで削除してしまいます。
 
+```tsx
+// ~/pages/index.tsx
+
+import Head from 'next/head'
+import Image from 'next/image'
+import { Inter } from 'next/font/google'
+import styles from '@/styles/Home.module.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export default function Home() {
+  return (
+    <>
+    </>
+  )
+}
+```
+
+- 上記まで不要なコードを削ぎ落としたら、
+- 最低限の見た目を作るための雛形を作っていきます。
+- `export default function Home() {}`配下にCSSを当てていきます。
+
+
+```tsx
+export default function Home() {
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+    </div>
+  );
+};
+```
+- ここまでの実装で、`localhost:3000`で確認するとこんな感じ。
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/73186494-1ed3-bb67-7867-23f9376a6983.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- どんどん実装していきます。
+- ここまで実装して、再度ブラウザを確認します。
+
+```tsx
+export default function Home() {
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src="" alt="" />
+      <button>今日の猫さん</button>
+    </div>
+  );
+};
+```
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/0dac6f4e-dabd-860f-c743-a33eaf72ae03.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- imgタグには、猫画像を取得するAPIで取得した画像を載せるようにしていきますが、
+- まだ実装段階ではないので、一旦タグだけ設置しておいています。
+- また、`styles.container`のプロパティ名？は、まだ`Home.module.css`には実装されていないので、スタイルは当たっていない状態。
+- 後程、`Home.module.css`にスタイルのコードを記述する必要がありあそうです。
+
+
+### ***<font color="orange">`猫画像`を取得するAPIを実装</font>***
+
+***<font color="Red">動画06分05秒付近から</font>***
+
+- 今回使用するAPIは`the cat api`
+
+https://thecatapi.com/
 
 
 
