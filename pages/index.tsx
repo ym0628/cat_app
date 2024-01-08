@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <h1>猫画像アプリ</h1>
-      <img src="" alt="" />
+      <img src="https://cdn2.thecatapi.com/images/1v1.jpg" alt="cat_image" />
       <button>今日の猫さん</button>
     </div>
   );
