@@ -200,13 +200,103 @@ export default function Home() {
 - 後程、`Home.module.css`にスタイルのコードを記述する必要がありあそうです。
 
 
-### ***<font color="orange">`猫画像`を取得するAPIを実装</font>***
+### ***<font color="orange">猫画像を取得するAPIの確認とスタイルの調整</font>***
 
 ***<font color="Red">動画06分05秒付近から</font>***
 
 - 今回使用するAPIは`the cat api`
 
 https://thecatapi.com/
+
+- 公式サイトのドキュメントメニューに進む。
+- ここのリンクを開くと、ランダムで猫画像が保存されたURLが表示される。
+- そのURLにアクセスすると猫画像が見れる。
+- リロードすると、自動的にまたランダムの猫画像が取得される。
+- https://api.thecatapi.com/v1/images/search
+- 今回はこちらの画像を使用させてもらいます。
+- https://cdn2.thecatapi.com/images/1v1.jpg
+
+
+```json
+[
+    {
+        "id":"1v1",
+        "url":"https://cdn2.thecatapi.com/images/1v1.jpg",
+        "width":320,
+        "height":320
+    }
+]
+```
+
+- 一旦、この画像をトップに置いておきます。
+- 教材動画では`index.tsx`に直接スタイルを記述していますが、
+- 自分のコード上では`<div className={styles.container}>`が定義されています。
+- せっかくなのでこれを利用します。
+- `Home.module.css`ファイルに新しく`.container`を定義して、ここにCSSスタイルを適用していきます。
+- スタイルは結構適当です。
+
+
+```css
+/* Home.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.container h1 {
+  margin-bottom: 15px;
+}
+
+.container img {
+  width: 350px;
+  height: auto;
+}
+
+.container button {
+  margin-top: 20px;
+}
+
+```
+
+- 以下、`index.tsx`に任意の画像を乗っけたファイルのコードです。
+
+```tsx
+// index.tsx
+
+export default function Home() {
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src="https://cdn2.thecatapi.com/images/1v1.jpg" alt="cat_image" />
+      <button>今日の猫さん</button>
+    </div>
+  );
+};
+```
+
+- 一旦、`localhost:3000`でWebブラウザを確認します。
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/5f15836d-c07c-eca3-f1bd-1ab19cf2ec8c.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- 見た目はいい感じに収まりました。
+- ここで一旦、コミットしておきます。
+
+
+### ***<font color="orange">いよいよAPIを叩いていく！</font>***
+
+***<font color="Red">動画08分47秒付近から</font>***
+
+
+
+
+
+
+
+
 
 
 
