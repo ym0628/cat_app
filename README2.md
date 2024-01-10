@@ -128,6 +128,12 @@ const Home: NextPage = () => {
 - Next.jsとTypeScriptを用いて開発する際は、概ね、`NextPage`という型を指定してあげることになる。
 - ただし、これはおそらくバージョン12以前のindexページの実装なので、バージョン14の2024/01/07時点では、また、少し違った型が定義されているのかなぁと思われる。
 - まぁ、とりあえずは、こんなものがあるんだなぁ、くらいの感覚で認識しておく程度で良いでしょう。とのこと。
+- 型をつける事により、VScode上（エディタ）でエラーをいち早く察知できるようになるのがメリットらしい。
+- 以下のようなエラー表記が確認できるようになる。
+
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/c8497a06-12c7-a47a-ec92-f4dbdf4d1c6c.jpeg" alt="代替テキスト" width=50% height=50%>
+
 
 
 <br>
@@ -290,11 +296,145 @@ export default function Home() {
 
 ***<font color="Red">動画08分47秒付近から</font>***
 
+- `button`を押したときに、APIが走るようにしたい。
+- TypeScriptの`onClick`イベントが発火するように実装する。
+- 具体的には、、、、
+    - まず`index.tsx`の`<button>`タグに`onClick=`のイベントを定義。
+    - この`onClick`イベントには任意の関数名`fetchCatImage`といった名前をつける。
+    - 次に、定義づけた関数`fetchCatImg`の処理について、`export default function Home() {}`の直下に実装していく。
 
 
+<br>
+
+***メモ***
+
+- `async`は非同期処理でAPIを実装するときに使うおまじない。アロー関数の手前に定義する。
+- `await`の`fetch`という関数が備わっているやつを使用している。
+- これも一旦おまじないと思っておく。奥が深そう。
+- URLは`the cat api`が指定しているAPIのURLを使用している。
+- `fetch`は日本語だと`読み込む`とか`取ってくる`みたいな意味。
+- これら自体は`JavaScript`の構文。
+- 当然、`TypeScript`でも使える。
+- `const res`を手前につけてあげて、叩いたAPI情報を受け取ることができる。
+- さらに受け取った情報をJSON形式で受け取りたいので、`const result`定数で`res.json();`としてあげる。
+- ここにも忘れずに`await`をつけてあげる。
+- そして、受け取ったJSONファイルを`console.log`で出力する。
+- 一度デベロッパーツールで確認するとわかるが、JSON形式の取得したファイルは、配列の0番目の要素の中にハッシュ形式で4つの属性（プロパティ）全てが格納されている。
+- よって今回は、配列の0番目の値を取ってくるので、`console.log(result[0]);`としてあげる。
 
 
+https://zenn.dev/kawaxumax/articles/0044a0e30536e2
 
+https://qiita.com/niusounds/items/37c1f9b021b62194e077
+
+
+- ここまで実装したら、ローカルのブラウザ環境で試してみる。
+- そうすると以下の画像のように、ボタンを押すとAPIが動いて、情報が出力されたことがわかる。
+
+<br>
+
+```tsx
+// index.tsx
+import Head from 'next/head'
+import Image from 'next/image'
+import { Inter } from 'next/font/google'
+import styles from '@/styles/Home.module.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export default function Home() {
+  const fetchCatImage = async () => {
+    const res = await fetch("https://api.thecatapi.com/v1/images/search");
+    const result = await res.json();
+    console.log(result[0]);
+  };
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src="https://cdn2.thecatapi.com/images/1v1.jpg" alt="cat_image" />
+      <button onClick={fetchCatImage}>
+        今日の猫さん
+      </button>
+    </div>
+  );
+};
+```
+
+<br>
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/d577ddc4-d642-aadd-fcdd-c5882811093a.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- いったん、ここまで。
+- ここまでのコードは`JavaScript`である。
+- まだ`TypeScript`は使っていない。
+
+<br>
+
+***<font color="Red">動画10分00秒付近から</font>***
+
+- 先の実装では`fetchCatImage`関数のなかで`console.log`で出力していたが、のちに実装する`handleClick`に対応するために、、、
+- このコードをコメントアウトし、新たに`return result[0]`としてAPI取得した要素をブラウザに表示させるようにします。
+
+```tsx
+export default function Home() {
+  const fetchCatImage = async () => {
+    const res = await fetch("https://api.thecatapi.com/v1/images/search");
+    const result = await res.json();
+    // console.log(result[0]);
+    return result[0];
+  };
+```
+
+
+<br>
+
+- 続いて、先ほどの実装では`fetchCatImage`関数を`onClick`でAPIを呼び出していたが、
+- 今度は新しく`handleClick`という関数を作り、その処理の中で`fetchCatImage`を呼び出すように変更します。
+- これは詳しくは今の所不明だけれど、そうするもんだと思っておこう。。。。
+- この記事が参考になるかも？
+
+https://qiita.com/jima-r20/items/839da7c2f26366491298
+
+- `handleClick`という関数を別で用意する意味としては、メソッドが増えたときに構文が長くならないようにするための処置なのかなぁ、、、？
+- ここまでのコード実装は以下の通り。
+
+```tsx
+export default function Home() {
+  const fetchCatImage = async () => {
+    const res = await fetch("https://api.thecatapi.com/v1/images/search");
+    const result = await res.json();
+    // console.log(result[0]);
+    return result[0];
+  };
+
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
+    console.log(catImage);
+  };
+
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src="https://cdn2.thecatapi.com/images/1v1.jpg" alt="cat_image" />
+      <button onClick={handleClick}>
+        今日の猫さん
+      </button>
+    </div>
+  );
+};
+```
+- 上記のように実装すると、先のコードと結果が同じになる。
+- つまり、うまく挙動を変えずにリファクタリング(?)できたことになる。
+
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/61a0507c-eb46-651c-4f92-4420b7a85139.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- 結果は同じで、中身のコードをきれいにできた。
+- 汎用性の高いコードにできた？とでもいうべきかな？
+- ここで一旦コミットしておきたい。
+
+
+***<font color="Red">動画11分30秒付近から</font>***
 
 
 
