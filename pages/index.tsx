@@ -5,8 +5,15 @@ import styles from '@/styles/Home.module.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+interface SearchCatImage {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
 export default function Home() {
-  const fetchCatImage = async () => {
+  const fetchCatImage = async (): Promise<SearchCatImage> => {
     const res = await fetch("https://api.thecatapi.com/v1/images/search");
     const result = await res.json();
     // console.log(result[0]);
@@ -15,7 +22,7 @@ export default function Home() {
 
   const handleClick = async () => {
     const catImage = await fetchCatImage();
-    console.log(catImage);
+    console.log(catImage.url);
   };
 
   return (
