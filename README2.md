@@ -509,6 +509,423 @@ export default function Home() {
 
 ***<font color="Red">動画16分20秒付近から</font>***
 
+- 現在は、特定のURLの`src`ソースを指定している状態。
+- この状態を`ハードコーティング`と呼ぶらしい。
+- このハードコーティングの状態から、ボタンを押した時に、APIで毎回引っ張ってきたURLを挿入すれば良い。
+- そのためには`変数`を定義する。
+- 変数名は`catImageUrl`とする。
+
+
+```tsx
+<img src={catImageUrl} />
+```
+
+- 次に、名付けた`catImageUrl`変数を、状態変数として中身を実装していく。
+
+```diff_tsx
+const Home: NextPage = () = {
++ const [catImageUrl, setCatImageUrl] = useState("");
+//以下省略
+```
+- 上記のように、HOMEの関数コンポーネントのすぐ下にコードを追記する。
+- `useState("");`は状態変数を意味するメソッド？
+- ここの記述は`React`を使っているらしい。
+
+https://zenn.dev/pu_ay/articles/99df8c9175a5f0
+
+```tsx
+const [状態変数, 状態を変更するための関数] = useState(状態の初期値)
+```
+- これはReactの構文であり、独自のルールとして存在するらしい。
+
+:::note warn
+- 引数の中は一旦、空にしておく。
+- 後でここの値は`SSG`を用いたコードを記述していくので。
+- なお、`("")`ダブルクォーテーションで囲まないとエラーになるので注意。
+- ここのエラーも`VScode`上で指摘してくれるので、やはりTypeScript優秀！
+:::
+
+- Reactを使った状態変数の定義が出来たので、次に、この変数を使って猫画像URLをブラウザで表示するようにする。
+- 具体的には先に実装したボタンクリック時の挙動の関数`handleClick`に対し実装する。
+- 現在、`console.log(catImage.url);`となっており、コンソールで出力する感じになっている。
+- これを消して修正していく。
+
+```diff_tsx
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
++   setCatImageUrl(catImage.url);
+  };
+```
+- これでOK。
+- ボタンクリック時にイベントが発火して？APIで取得したURLを、htmlタグである`<img src={catImageUrl} />`に出力してくれるようになる。
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/ae5838da-964b-c692-ad1d-426c4cc8a0ba.jpeg" alt="代替テキスト" width=50% height=50%>
+
+<br>
+
+👆ここで一旦コミットしておく。
+
+<br>
+
+- 現状のソースコード
+
+```diff_tsx
+  import Head from 'next/head'
+  import Image from 'next/image'
+  import { Inter } from 'next/font/google'
+  import styles from '@/styles/Home.module.css'
++ import { useState } from 'react'
+
+const inter = Inter({ subsets: ['latin'] })
+
+interface SearchCatImage {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
+export default function Home() {
++ const [catImageUrl, setCatImageUrl] = useState("");
+  const fetchCatImage = async (): Promise<SearchCatImage> => {
+    const res = await fetch("https://api.thecatapi.com/v1/images/search");
+    const result = await res.json();
+    // console.log(result[0]);
+    return result[0];
+  };
+
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
+    console.log(catImage.url);
++   // console.log(catImage.url);
++   setCatImageUrl(catImage.url);
+  };
+
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src="https://cdn2.thecatapi.com/images/1v1.jpg" alt="cat_image" />
++     <img src={catImageUrl} alt="cat_image" />
+      <button onClick={handleClick}>
+        今日の猫さん
+      </button>
+    </div>
+  );
+};
+```
+
+:::note info
+- Reactのメソッド？である`useState`を使用すると、自動的に`import { useState } from 'react'`を定義してくれている！
+- `TypeScript`か`Next.js`の標準装備？なのか分からないけど、凄い！！
+:::
+
+<br>
+
+
+### ***<font color="orange">ブラウザリロード時にAPIが作動するようにSSRを実装する</font>***
+
+***<font color="Red">動画18分22秒付近から</font>***
+
+<br>
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/3a81d405-c720-7ddf-f061-e1e8fb168995.jpeg" alt="代替テキスト" width=50% height=50%>
+
+<br>
+
+
+- 現状、indexページをリロードした最初の画面では、
+- 画像が表示されていない状態。
+- これをリロードした時点から猫画像APIを取得してくれるようにしていく。
+- 具体的には`Next.js`で扱える`SSR（サーバーサイドプロップス）`という機能を実装する。
+
+<br>
+
+***<font color="Blue">SSRとSSGの違いと使い分け方</font>***
+
+- `SSG`は`Static Site Generator`の略で日本語で「`静的生成`」という意味。
+- 例えばクライアントであるブラウザから`indexページ`をリクエストしたときに、、、
+- あらかじめデータを用意しておくことで、読み込み速度が格段に早くなるという機能。
+- これは静的なデータを対象にした場合に使える。
+- ただし、今回のようなAPIを取得するという挙動は動的なデータであるため、`SSGは使えない`。
+
+<br>
+
+- 対して`SSR`は、`サーバーサイドレンダリング、もしくはサーバーサイドプロップス`と呼ばれており、Webページを生成する際にサーバーサイドでHTMLを生成し、クライアントに送信する`Next.js`の機能を指す。
+- こちらも、SSGと同様、ページの読み込み速度が速くなるメリットがある。
+- また、`SSG`とは違い、サーバー側でデータを取ってくる挙動を示すので、`動的なデータ`に対しても使うことができるのがメリット。
+
+<br>
+
+- どのように使い分けるかは、現在の自分の知識ではそこまで理解していないが、簡単な静的サイトの表示であればSSG、APIを叩くような動的データを取得するページのレンダリングに関してはSSRを使用する。。。。
+- といった使い分け方ができるのではないかと想像しています。
+- 間違ってたらすいません。
+
+<br>
+
+***<font color="orange">話を戻して、改めてSSRを実装していく</font>***
+
+***<font color="Red">動画18分22秒付近から</font>***
+
+- 記述する場所は`return`文の上か下
+- どっちでもよいが、今回は`return`文の下に記述していく。
+- 今回は`getServerSideProps`という`Next.js標準装備のメソッド？`を利用する。
+- 型は、こちらもNext.js標準サポートの`GetServerSideProps`という型を利用する。
+
+```tsx
+export const getServerSideProps: GetServerSideProps<>;
+```
+
+https://www.commte.co.jp/learn-nextjs/getServerSideProps
+
+- ここを記述すると、自動的に`import構文`も生成してくれている。サンキュー！
+
+```tsx
+import { GetServerSideProps } from 'next'
+```
+
+- 次に、``のジェネリックにお手製の型を用意してあげる。
+- 任意の名前で今回は``とする。
+- なお、ジェネリックとは日本語で、一般的な、包括的な、という意味。
+- ジェネリック医薬品では、包括的な名前にすることで、後発の医薬品を患者が選択することができるわけだ。
+- Next.jsでは、URLの`string型`とか、数字の`number型`などを指定できるのに加え、
+- 今回のように`interface`を活用した`お手製の型`を`GetServerSideProps`に指定することができる。
+
+https://www.commte.co.jp/docs/typescript-beginner
+
+- `ジェネリック`を使用すると、`型の柔軟性を保ちながら、型安全性を維持できる`のがメリット。
+- ひとまず以下のように実装した。
+
+
+```tsx
+interface IndexPageProps {
+  initialCatImageUrl: string;
+}
+
+// 中略
+
+export const getServerSideProps: GetServerSideProps<IndexPageProps>;
+```
+
+- 定義した`IndexPageProps`。
+- ここにAPIで取得した猫画像のURLが入るようにしていくわけだ。
+- ここでも`async`関数を使用して、非同期処理で実装する。
+
+```tsx
+export const getServerSideProps: GetServerSideProps<
+    IndexPageProps
+    > = async () => {
+    
+    };
+```
+
+- 行が長くなるときは、上記のように改行できるようだ。
+- 今回はブラウザをリロードしたタイミングにサーバーサイドでAPI取得してレンダリングしてフェッチングしてくるように実装したい。
+- 
+
+```diff_tsx
+// SSR
+export const getServerSideProps: GetServerSideProps<
+  IndexPageProps
+> = async () => {
++ const catImage = await fetchCatImage();
+};
+```
+
+- と、ここでエラー発生
+- `fetchCatImage`が見つかりません。となっている。
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/81998cb8-f564-278f-2532-38643908a8a4.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- 猫画像を取得するAPIを実装した`fetchCatImage`関数が取れてこれていないようだ。
+- 原因は、`fetchCatImage`関数を実装した場所にある。
+- `Home`関数コンポーネントの内部に実装しているのがダメっぽいので、外側上にこの関数を移動させてあげる。
+
+
+```diff_tsx
+interface IndexPageProps {
+  initialCatImageUrl: string;
+}
+
++   const fetchCatImage = async (): Promise<SearchCatImage> => {
++     const res = await fetch("https://api.thecatapi.com/v1/images/search");
++     const result = await res.json();
++     // console.log(result[0]);
++     return result[0];
++   };
+
+export default function Home() {
+  const [catImageUrl, setCatImageUrl] = useState("");
+
+- 
+- 
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
+    // console.log(catImage.url);
+    setCatImageUrl(catImage.url);
+  };
+```
+
+- これで`fetchCatImage関数が取得できない`エラーが解消される。
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/b50feba2-71c9-f3da-e4ab-7ed63ab3cb31.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- 次に、`return`文で返してあげる。何を？
+- 猫画像のURL（String型）を返してあげる。
+- プロパティには`props: {}`というものを使用する。
+- これは公式ドキュメントでも解説されている構文のようだ。
+
+```diff_tsx
+    export const getServerSideProps: GetServerSideProps<
+      IndexPageProps
+    > = async () => {
+      const catImage = await fetchCatImage();
++     return {
++       props: {
++         initialCatImageUrl: catImage.url,
++       },
++     };
+    };
+```
+
+- ここまでを整理すると、、、、
+
+:::note info
+- ブラウザリロード時にも、`API`で猫画像を引っ張ってきたいので、、、
+- `Next.js`で標準サポートされている`GetServerSideProps`を使い、
+- ジェネリックには任意で名付けた、`sring型のURL`を指定する`interface`である`IndexPageProps`を定義した。
+- 先に実装済みの`fetchCatImage`関数を呼び出し、猫画像APIを叩くようにここで再利用して、
+- 公式で解説されている`return { props: {} }`構文を使い、
+- `interface`で定義づけた`IndexPageProps`の中にある変数`initialCatImageUrl`すなわち`catImage.url`という`Sring型`のURL情報を返すというところまで実装した。
+:::
+
+- だが、ここで終わりではない。
+- 最後に、この実装した一連のSSRの挙動を、
+- 最初のブラウザにアクセスしたとき、リロードしたとき、
+- すなわちクライアントがHTTPリクエストを送ってきたときに、返すようにしなければならない。
+- それはどうやるのか？
+- 具体的には、`Homeコンポーネント`に渡してあげる。
+- 何を？
+- `SSR`で実装した`IndexPageProps`ジェネリックに定義した変数`initialCatImageUrl`を指定してあげる。ここには`catImage.url`という`Sring型`のURL情報が入っている。
+
+
+```tsx
+// 変更前
+
+export default function Home() {
+  const [catImageUrl, setCatImageUrl] = useState("");
+
+```
+
+- `export default function Home() {};`というHomeコンポーネント？に諸々の実装をしていたが、なんかこれは違うっぽいので削除。
+- 動画で解説されている通り、Home関数コンポーネントを`アロー関数`で指定してあげた。
+- 最終的には下記のように実装することで解決した。
+
+
+
+```tsx
+// 変更後
+const Home: NextPage<IndexPageProps> = ( {initialCatImageUrl} ) => {
+  const [catImageUrl, setCatImageUrl] = useState(initialCatImageUrl);
+
+// 中略
+export default Home;
+
+```
+
+:::note alert
+なお、`export default Home;`を最後に記述しておかないとエラーになる。
+エラーの内容は下記の通り。
+
+`Error: The default export is not a React Component in page: "/"`
+
+:::
+
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/cac66f6c-ac98-7668-3e18-3dba60767054.jpeg" alt="代替テキスト" width=50% height=50%>
+
+
+- ひとまずこれで完成となります。
+- ここでコミットしておきます。
+- ここまでのソースコードは以下の通り。
+
+```tsx
+//index.tsx
+
+import Head from 'next/head'
+import Image from 'next/image'
+import { Inter } from 'next/font/google'
+import styles from '@/styles/Home.module.css'
+import { useState } from 'react'
+import { GetServerSideProps, NextPage } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
+
+interface SearchCatImage {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+}
+
+interface IndexPageProps {
+  initialCatImageUrl: string;
+}
+
+const fetchCatImage = async (): Promise<SearchCatImage> => {
+  const res = await fetch("https://api.thecatapi.com/v1/images/search");
+  const result = await res.json();
+  // console.log(result[0]);
+  return result[0];
+};
+
+const Home: NextPage<IndexPageProps> = ( {initialCatImageUrl} ) => {
+  const [catImageUrl, setCatImageUrl] = useState(initialCatImageUrl);
+
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
+    // console.log(catImage.url);
+    setCatImageUrl(catImage.url);
+  };
+
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src={catImageUrl} alt="cat_image" />
+      <button onClick={handleClick}>
+        今日の猫さん
+      </button>
+    </div>
+  );  
+};
+
+// SSR
+export const getServerSideProps: GetServerSideProps<
+  IndexPageProps
+> = async () => {
+  const catImage = await fetchCatImage();
+  return {
+    props: {
+      initialCatImageUrl: catImage.url,
+    },
+  };
+};
+
+export default Home;
+
+```
+
+
+<br>
+
+
+### ***<font color="orange">おまけの実装〜 Now loading 〜</font>***
+
+***<font color="Red">動画27分09秒付近から</font>***
+
+
+
+
+
 
 
 
