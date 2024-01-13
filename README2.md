@@ -436,6 +436,80 @@ export default function Home() {
 
 ***<font color="Red">動画11分30秒付近から</font>***
 
+- ここまではJavaScriptの実装。
+- このままでも良いのだが、、、、
+- 例えば`<button onClick={handleClick.alt}>`のように存在しないプロパティ`alt`を指定すると、エラーになる。
+- なぜなら、`alt`プロパティは定義していないから。
+- JavaScriptだとここのエラーに気づきづらいのがデメリット。
+- js？html？にコンパイルされた時点でエラーが発覚してくれると、気づきやすい。
+- ここを解消してくれるのがTypeScriptということになる。
+- では、次にTypeScriptでの実装をおこなっていく。
+
+<br>
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/58bfa402-84dc-c85e-a9c8-d3af95d0d736.jpeg" alt="代替テキスト" width=50% height=50%>
+
+<br>
+
+### ***<font color="orange">TypeScriptを用いた実装！</font>***
+
+***<font color="Red">動画13分20秒付近から</font>***
+
+- 関数コンポーネントの外側、上に追記していきます。
+- `interface`というメソッド?を使用します。
+- 名前は`SearchCatImage`とします。（任意）
+- `height` `id`  `url` `width`という4つのプロパティだけを、`型指定`してあげる。
+- 次に、`fetchCatImage`関数に対して、`Promise`メソッド？を用いて、対象を`SearchCatImage`に指定してあげる。
+- そうすることで、`SearchCatImage`で指定した4つのプロパティの型だけを取得するように制限をかけられると共に、`VScode`などのテキストエディタ上での実装の段階で、エラーのポップアップが表示されるようになる！
+- これは便利！
+
+```diff_tsx
++ interface SearchCatImage {
++   id: string;
++   url: string;
++   width: number;
++   height: number;
++ }
+
+export default function Home() {
++ const fetchCatImage = async (): Promise<SearchCatImage> => {
+    const res = await fetch("https://api.thecatapi.com/v1/images/search");
+    const result = await res.json();
+    // console.log(result[0]);
+    return result[0];
+  };
+```
+
+- すると、エラーが`VScode`の実装段階で気づけるようになった！
+
+<br>
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/b03dd876-684a-c66a-2c52-a98a5494c718.jpeg" alt="代替テキスト" width=50% height=50%>
+
+<br>
+
+
+- エラーに気づきやすくなったところで、
+- 次に、取得する情報をurlに限定してあげる。
+
+```diff_tsx
+  const handleClick = async () => {
+    const catImage = await fetchCatImage();
++   console.log(catImage.url);
+  };
+```
+
+- TypeScriptの重要項目の実装はいったん、ここまで。
+- コミットしておきます。
+
+<br>
+
+
+### ***<font color="orange">取得した猫画像URLを画面に出力</font>***
+
+***<font color="Red">動画16分20秒付近から</font>***
+
+
 
 
 
