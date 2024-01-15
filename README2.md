@@ -922,13 +922,188 @@ export default Home;
 
 ***<font color="Red">動画27分09秒付近から</font>***
 
+- 最後に、おまけの実装をしていく。
+- ボタンをクリックして画像が表示されるまでの間のローディング中に何か待たせていることを知らせる機能を追加していきます。
+- 今回は、`semantic ui`という`CSSフレームワーク`を利用していきます。
+- `React`で`semantic ui`を利用できるこちらのサイトを利用します。
+
+https://react.semantic-ui.com/
 
 
+- こちらのサイトの`Get Started`のページを参考に導入・実装を進めていきます。
+- まずはインストールします。
+- `yarn`か`npm`かでコマンドが異なります。
 
 
+```terminal
+$  yarn add semantic-ui-react semantic-ui-css
+## Or NPM
+$  npm install semantic-ui-react semantic-ui-css
+```
+
+- コマンドを叩くとこんな感じになりました。
+
+```terminal
+added 16 packages, and audited 299 packages in 9s
+
+108 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+```
+
+- インストールすると、`package.json`と`package-lock.json`が更新されます。
+
+```terminal
+git status -u
+On branch development
+Your branch is up to date with 'origin/development'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   package-lock.json
+	modified:   package.json
+```
+
+- 次に、`semantic ui`を開発中のプロジェクトで読み込むための`import文`を記述します。
 
 
+```diff_tsx
+// index.tsx
 
+  import { useState } from 'react'
+  import { GetServerSideProps, NextPage } from 'next'
++ import 'semantic-ui-css/semantic.min.css'
+
+// 以下省略
+```
+
+- 次に、実際に使用したいローディン中のアイコンを実装するにあたり、`Loader`というものを`semantic ui`から`import`する構文を記述します。
+
+
+```diff_tsx
+// index.tsx
+
+  import { useState } from 'react'
+  import { GetServerSideProps, NextPage } from 'next'
+  import 'semantic-ui-css/semantic.min.css'
++ import { Loader } from 'semantic-ui-react'
+
+// 以下省略
+```
+
+- 続いて、`import`した`Loader`を、ボタンクリックの際に出るように、以下の場所に`<Loader active />`と記述します。
+- `Loader`で先ほどimportした機能をここで使うという宣言となり、
+- `acrive`を付けることでローディン中のアイコンを有効にさせることができます。
+
+
+```diff_tsx
+// index.tsx
+
+  return (
+    <div className={styles.container}>
+      <h1>猫画像アプリ</h1>
+      <img src={catImageUrl} alt="cat_image" />
++     <Loader active />
+      <button onClick={handleClick}>
+        今日の猫さん
+      </button>
+    </div>
+  );  
+};
+```
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/80b9e21b-d6ec-ab3b-6350-a3789fd16431.jpeg" alt="代替テキスト" width=50% height=50%>
+
+- 一応アイコンを表示させることに成功したが、
+- このままだと、ずっとアイコンが出たままの状態。
+- 続いて、ローディン中の時だけに、このアイコンを出すようにしたいので、その実装を行います。
+- 具体的には`is loading`という状態変数を新たに定義していきます。
+
+
+***<font color="Red">動画29分23秒付近から</font>***
+
+- 状態変数`isLoading`の定義場所は、
+- Home関数コンポーネントの直下、先に定義した`catImageUrl`の直下に記述していきます。
+- ここらへんの記述は、TypeScriptと関係ないが、おまけの実装ということでやっていきます。
+
+```diff_tsx
+// index.tsx
+
+const Home: NextPage<IndexPageProps> = ( {initialCatImageUrl} ) => {
+  const [catImageUrl, setCatImageUrl] = useState(initialCatImageUrl);
++ const [isLoading, setIsLoading] = useState(false);
+```
+
+- 最初の状態の`useState(false);`としておく。
+- そして、ボタンがクリックされた時、すなわち`handleClick`関数が実行されるタイミングで、
+- `isLoading`が実行されるようにします。
+- ボタンクリックで`setIsLoading(true);`として、
+- ローディング終了で`setIsLoading(false);`としてあげる。
+- 簡単❗️
+
+```diff_tsx
+// index.tsx
+
+  const handleClick = async () => {
++   setIsLoading(true);
+    const catImage = await fetchCatImage();
+    setCatImageUrl(catImage.url);
++   setIsLoading(false);
+  };
+```
+
+- 次に、`setIsLoading(true);`であれば、アイコンを表示させて、
+- `setIsLoading(false);`となったら、猫画像を表示させる。
+- このように考えて実装する。
+- 場所は`return`構文の中で記述する。
+- コーディングは`三項演算子`を用いて記述していきます。
+
+<hr>
+
+- `{isLoading ? }`が`true`であった場合に、
+- `<Loader active />`としてローディング中アイコンを表示させる。
+- そしてローディングが成功したら、猫画像（URL）を表示させる。
+
+
+```tsx
+// index.tsx
+
+{isLoading ? <Loader active />: <img src={catImageUrl} alt="cat_image" />}
+
+```
+
+- 三項演算子をわかりやすく表現するために、以下のように改行することもできる。
+- こっちの方が見た目的にわかりやすいかも？
+
+
+```tsx
+// index.tsx
+
+      {isLoading ? (
+        <Loader active />
+      ) : (
+        <img src={catImageUrl} alt="cat_image" />
+      )}
+```
+
+:::note info
+- `true`ならアイコンを表示させて、、
+- 読み込みが終了して`false`になったら
+- `猫画像`を表示させる。
+:::
+
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/a6f73d7f-8682-4a40-5197-6a31e1af8b8e.jpeg" alt="代替テキスト" width=50% height=50%>
+
+
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3486945/68eb608e-0f7e-2f9c-5ece-004dfa7fd7a4.jpeg" alt="代替テキスト" width=50% height=50%>
+
+
+- 以上で終了❗️
+- お疲れ様でした。
+- コミット・プルリクエスト・マージして終了とします。
 
 
 
