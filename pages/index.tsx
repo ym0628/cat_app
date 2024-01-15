@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
 import { useState } from 'react'
 import { GetServerSideProps, NextPage } from 'next'
+import 'semantic-ui-css/semantic.min.css'
+import { Loader } from 'semantic-ui-react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,17 +29,24 @@ const fetchCatImage = async (): Promise<SearchCatImage> => {
 
 const Home: NextPage<IndexPageProps> = ( {initialCatImageUrl} ) => {
   const [catImageUrl, setCatImageUrl] = useState(initialCatImageUrl);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
+    setIsLoading(true);
     const catImage = await fetchCatImage();
-    // console.log(catImage.url);
     setCatImageUrl(catImage.url);
+    setIsLoading(false);
   };
 
   return (
     <div className={styles.container}>
       <h1>猫画像アプリ</h1>
-      <img src={catImageUrl} alt="cat_image" />
+      {isLoading ? (
+        <Loader active />
+      ) : (
+        <img src={catImageUrl} alt="cat_image" />
+      )}
+
       <button onClick={handleClick}>
         今日の猫さん
       </button>
